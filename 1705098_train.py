@@ -13,15 +13,16 @@ model = Model('model.txt')
 model.print_model()
 num_classes = 10
 num_samples = 16
-num_epochs = 1
+num_epochs = 2
 lr = 0.001
 
-x_train , y_train , x_validation , y_validation , x_test , y_test = load_data(n_samples=50)
+x_train , y_train , x_validation , y_validation , x_test , y_test = load_data(n_samples=80)
 
 
 num_batches = math.ceil(y_train.shape[0] / num_samples)
 min_f1_score = math.inf
 validation_stats = []
+training_stats = []
 
 for epoch in range(num_epochs):
     for batch in range(num_batches):
@@ -32,8 +33,10 @@ for epoch in range(num_epochs):
         for i in range(y_true.shape[1]):
             y_true[y_train[batch * num_samples + i, 0], i] = 1  # generating one-hot encoding of y_train
         
-        model.train(x_train[batch * num_samples: batch * num_samples + n_samples], y_true, lr)
+        loss = model.train(x_train[batch * num_samples: batch * num_samples + n_samples], y_true, lr)
     print()
+    training_stats.append([epoch + 1, loss])
+    print(f'(Training) Epoch: {epoch + 1} -> Training loss {loss}')
     
     y_true = np.zeros((num_classes, y_validation.shape[0]))
     y_predicted = model.predict(x_validation)
@@ -59,6 +62,7 @@ with open('outputdir/validation_stats.csv', 'w') as csv_file:
     csv_writer.writerow(['Epoch', 'CE Loss', 'Accuracy', 'F1 Score']) 
     csv_writer.writerows(validation_stats)
 
+
 model.set_model()
 
 y_true = np.zeros((num_classes, y_test.shape[0]))
@@ -77,3 +81,8 @@ with open('outputdir/test_stats.csv', 'w') as csv_file:
     csv_writer = csv.writer(csv_file) 
     csv_writer.writerow(['CE Loss', 'Accuracy', 'F1 Score']) 
     csv_writer.writerows(test_stats)
+
+with open('outputdir/training_stats.csv', 'w') as csv_file:
+    csv_writer = csv.writer(csv_file) 
+    csv_writer.writerow(['Epoch', 'Training_Loss']) 
+    csv_writer.writerows(training_stats)

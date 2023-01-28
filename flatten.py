@@ -21,5 +21,11 @@ class FlatteningLayer():
         del_u = np.reshape(del_u, self.u_shape)
         return del_u
 
+    def update_learnable_parameters(self, del_w, del_b, lr):
+        pass
+    
+    def save_learnable_parameters(self):
+        pass
+    
     def set_learnable_parameters(self):
         pass

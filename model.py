@@ -46,6 +46,8 @@ class Model:
         
         for i in range(len(self.model_components) - 1, -1, -1):
             del_v = self.model_components[i].backward(del_v, lr)
+
+        return loss
     
     def predict(self, u):
         for i in range(len(self.model_components)):

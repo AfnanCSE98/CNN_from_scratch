@@ -22,5 +22,11 @@ class ActivationLayer():
         del_u = del_v * del_u
         return del_u
 
+    def update_learnable_parameters(self, del_w, del_b, lr):
+        pass
+    
+    def save_learnable_parameters(self):
+        pass
+    
     def set_learnable_parameters(self):
         pass
