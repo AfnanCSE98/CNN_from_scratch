@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import pickle 
 from convolution import ConvolutionLayer
 from relu import ActivationLayer
 from maxpooling import MaxPoolingLayer
@@ -66,3 +66,12 @@ class Model:
     def print_model(self):
         for i in range(len(self.model_components)):
             print(self.model_components[i])
+
+    #save model using pickle
+    def save_model_pickle(self, model_path):
+        with open(model_path, 'wb') as model_file:
+            pickle.dump(self.model_components, model_file)
+
+    def load_model_pickle(self, model_path):
+        with open(model_path, 'rb') as model_file:
+            self.model_components = pickle.load(model_file)

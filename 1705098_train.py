@@ -7,7 +7,7 @@ import os
 import csv 
 
 from model import Model
-from utils import load_data , subsample_dataset  , calculate_f1_scores , calculate_cross_entropy_loss
+from utils import load_train_data , calculate_f1_scores , calculate_cross_entropy_loss
 
 model = Model('model.txt')
 model.print_model()
@@ -16,7 +16,7 @@ num_samples = 16
 num_epochs = 2
 lr = 0.001
 
-x_train , y_train , x_validation , y_validation , x_test , y_test = load_data(n_samples=80)
+x_train , y_train , x_validation , y_validation  = load_train_data(n_samples=100 , path = 'training-a')
 
 
 num_batches = math.ceil(y_train.shape[0] / num_samples)
@@ -65,22 +65,7 @@ with open('outputdir/validation_stats.csv', 'w') as csv_file:
 
 model.set_model()
 
-y_true = np.zeros((num_classes, y_test.shape[0]))
-y_predicted = model.predict(x_test)
-
-for i in range(y_true.shape[1]):
-    y_true[y_test[i, 0], i] = 1  # generating one-hot encoding of y_test
-
-cross_entropy_loss = calculate_cross_entropy_loss(y_true, y_predicted)
-accuracy, f1_score = calculate_f1_scores(num_classes, y_test, np.reshape(np.argmax(y_predicted, axis=0), y_test.shape))
-
-test_stats = [[cross_entropy_loss, accuracy, f1_score]]
-print(f'(Testing) -> CE Loss: {cross_entropy_loss:.4f}\tAccuracy: {accuracy:.4f}\tF1 Score: {f1_score:.4f}')
-
-with open('outputdir/test_stats.csv', 'w') as csv_file:
-    csv_writer = csv.writer(csv_file) 
-    csv_writer.writerow(['CE Loss', 'Accuracy', 'F1 Score']) 
-    csv_writer.writerows(test_stats)
+model.save_model_pickle('outputdir/model.pkl')
 
 with open('outputdir/training_stats.csv', 'w') as csv_file:
     csv_writer = csv.writer(csv_file) 
