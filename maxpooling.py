@@ -14,36 +14,44 @@ class MaxPoolingLayer():
         return f'MaxPool(kernel={self.kernel_size}, stride={self.stride})'
     
     def forward(self, u):
+
+        print("start of maxPooling forward : " , u.shape)
         self.u_shape = u.shape
         
-        num_samples = u.shape[0]
-        input_dim = u.shape[1]
+        num_samples, input_dim, _, num_channels = u.shape
         output_dim = math.floor((input_dim - self.kernel_size) / self.stride) + 1
-        num_channels = u.shape[3]
+
+        stride = self.stride
+        kernel_size = self.kernel_size
         
         v = np.zeros((num_samples, output_dim, output_dim, num_channels))
         self.v_map = np.zeros((num_samples, output_dim, output_dim, num_channels)).astype(np.int32)
         
-        for k in range(num_samples):
-            for l in range(num_channels):
-                for i in range(output_dim):
-                    for j in range(output_dim):
-                        v[k, i, j, l] = np.max(u[k, i * self.stride: i * self.stride + self.kernel_size, j * self.stride: j * self.stride + self.kernel_size, l])
-                        self.v_map[k, i, j, l] = np.argmax(u[k, i * self.stride: i * self.stride + self.kernel_size, j * self.stride: j * self.stride + self.kernel_size, l])
         
-        return v
-        # num_samples, input_dim, _, num_channels = u.shape
-        # output_dim = math.floor((input_dim - self.kernel_size) / self.stride) + 1
-        # v = np.zeros((num_samples, output_dim, output_dim, num_channels))
-        # self.v_map = np.zeros((num_samples, output_dim, output_dim, num_channels)).astype(np.int32)
-        
-        # for k in range(num_samples):
-        #     for l in range(num_channels):
-        #         i, j = np.mgrid[:output_dim, :output_dim]
-        #         v[k, i, j, l] = np.max(u[k, i * self.stride: i * self.stride + self.kernel_size, j * self.stride: j * self.stride + self.kernel_size, l], axis=(1, 2))
-        #         self.v_map[k, i, j, l] = np.argmax(u[k, i * self.stride: i * self.stride + self.kernel_size, j * self.stride: j * self.stride + self.kernel_size, l], axis=(1, 2))
+        vectorize = True
+        if not vectorize:        
+            for k in range(num_samples):
+                for l in range(num_channels):
+                    for i in range(output_dim):
+                        for j in range(output_dim):
+                            v[k, i, j, l] = np.max(u[k, i * self.stride: i * self.stride + self.kernel_size, j * self.stride: j * self.stride + self.kernel_size, l])
+                            self.v_map[k, i, j, l] = np.argmax(u[k, i * self.stride: i * self.stride + self.kernel_size, j * self.stride: j * self.stride + self.kernel_size, l])
+        else:
+            strides = (stride* input_dim  ,stride, input_dim , 1)
+            strides = tuple(i * u.itemsize for i in strides)
 
-        # return v
+            subM = np.lib.stride_tricks.as_strided(u, shape=( output_dim , output_dim, kernel_size , kernel_size), strides=strides)
+
+            v = np.zeros((num_samples, output_dim, output_dim, num_channels))
+
+            v = np.amax(subM, axis=(2,3))
+            v = np.expand_dims(v,axis=0)
+            v = np.repeat(v, num_samples, axis=0)
+            v = np.expand_dims(v, axis=3)
+            v = np.repeat(v, num_channels, axis=3)
+
+        print("end of maxPooling forward : " , v.shape)
+        return v
     
     def backward(self, del_v, lr):
         del_u = np.zeros(self.u_shape)

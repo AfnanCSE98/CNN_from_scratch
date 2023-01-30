@@ -18,26 +18,7 @@ class ConvolutionLayer:
         return f'Conv(filter={self.num_filters}, kernel={self.kernel_size}, stride={self.stride}, padding={self.padding})'
     
     def forward(self, u):
-        # num_samples = u.shape[0]
-        # input_dim = u.shape[1]
-        # output_dim = math.floor((input_dim - self.kernel_size + 2 * self.padding) / self.stride) + 1
-        # num_channels = u.shape[3]
-        
-        # if self.weights is None:
-        #     self.weights = np.random.randn(self.num_filters, self.kernel_size, self.kernel_size, num_channels) * math.sqrt(2 / (self.kernel_size * self.kernel_size * num_channels))
-        # if self.biases is None:
-        #     self.biases = np.zeros(self.num_filters)
-        
-        # self.u_pad = np.pad(u, ((0,), (self.padding,), (self.padding,), (0,)), mode='constant')
-        # v = np.zeros((num_samples, output_dim, output_dim, self.num_filters))
-        
-        # for k in range(num_samples):
-        #     for l in range(self.num_filters):
-        #         for i in range(output_dim):
-        #             for j in range(output_dim):
-        #                 v[k, i, j, l] = np.sum(self.u_pad[k, i * self.stride: i * self.stride + self.kernel_size, j * self.stride: j * self.stride + self.kernel_size, :] * self.weights[l]) + self.biases[l]
-        
-        # return v
+        print("start of Conv Forward " , u.shape)
         num_samples, input_dim, _, num_channels = u.shape
         output_dim = math.floor((input_dim - self.kernel_size + 2 * self.padding) / self.stride) + 1
 
@@ -45,13 +26,27 @@ class ConvolutionLayer:
             self.weights = np.random.randn(self.num_filters, self.kernel_size, self.kernel_size, num_channels) * math.sqrt(2 / (self.kernel_size * self.kernel_size * num_channels))
         if self.biases is None:
             self.biases = np.zeros(self.num_filters)
-
+        
         self.u_pad = np.pad(u, ((0,), (self.padding,), (self.padding,), (0,)), mode='constant')
         v = np.zeros((num_samples, output_dim, output_dim, self.num_filters))
-        for l in range(self.num_filters):
-            for i in range(output_dim):
-                for j in range(output_dim):
-                    v[:, i, j, l] = np.sum(self.u_pad[:, i * self.stride: i * self.stride + self.kernel_size, j * self.stride: j * self.stride + self.kernel_size, :] * self.weights[l], axis=(1, 2, 3)) + self.biases[l]
+        
+        vectorized = True 
+        if not vectorized:
+
+            for k in range(num_samples):
+                for l in range(self.num_filters):
+                    for i in range(output_dim):
+                        for j in range(output_dim):
+                            v[k, i, j, l] = np.sum(self.u_pad[k, i * self.stride: i * self.stride + self.kernel_size, j * self.stride: j * self.stride + self.kernel_size, :] * self.weights[l]) + self.biases[l]
+        else:
+            # write code for convolution operation using vectorization.DOnt use for loops
+            for l in range(self.num_filters):
+                for k in range(num_samples):
+                    conv_result = np.convolve(self.u_pad[k,:,:,:], self.weights[l,:,:,:], mode='valid')
+                    v[k,:,:,l] = conv_result + self.biases[l]
+                        
+           
+        print("end of Conv Forward " , v.shape)
         return v
         
     def backward(self, del_v, lr):

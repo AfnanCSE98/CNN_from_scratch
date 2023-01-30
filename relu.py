@@ -10,9 +10,11 @@ class ActivationLayer():
         return 'ReLU'
     
     def forward(self, u):
+        print("start of ReLU forward : " , u.shape)
         self.u = u
         v = np.copy(u)
         v[v < 0] = 0  # applying ReLU activation function
+        print("end of ReLU forward : " , v.shape)
         return v
     
     def backward(self, del_v, lr):
