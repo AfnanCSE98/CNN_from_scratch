@@ -39,8 +39,9 @@ class Model:
             u = self.model_components[i].forward(u)
         
         del_v = u - y_true  # denoting y_predicted by u
-        # calculate training loss
-        loss = -np.sum(y_true * np.log(u))
+        # calculate categorical cross-entropy loss. It measures the dissimilarity between the predicted probabilities and the true class labels
+        loss = -np.sum(y_true * np.log(u + 1e-8)) / y_true.shape[0]
+        
         print('Training loss: ', loss)
         print(" ")
         

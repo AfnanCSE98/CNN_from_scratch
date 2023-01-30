@@ -9,6 +9,7 @@ class SoftmaxLayer():
         return 'Softmax'
     
     def forward(self, u):
+        u = u - np.max(u, axis=0, keepdims=True)
         v = np.exp(u)
         v = v / np.sum(v, axis=0)
         return v

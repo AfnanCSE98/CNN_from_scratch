@@ -13,12 +13,14 @@ class ConvolutionLayer:
         self.weights_matrix = None
         self.biases_vector = None
         self.u_pad = None
+        self.verbose = False
     
     def __str__(self):
         return f'Conv(filter={self.num_filters}, kernel={self.kernel_size}, stride={self.stride}, padding={self.padding})'
     
     def forward(self, u):
-        print("start of Conv Forward " , u.shape)
+        if self.verbose:
+            print("start of convolution forward : " , u.shape)
         num_samples, input_dim, _, num_channels = u.shape
         output_dim = math.floor((input_dim - self.kernel_size + 2 * self.padding) / self.stride) + 1
 
@@ -39,14 +41,21 @@ class ConvolutionLayer:
                         for j in range(output_dim):
                             v[k, i, j, l] = np.sum(self.u_pad[k, i * self.stride: i * self.stride + self.kernel_size, j * self.stride: j * self.stride + self.kernel_size, :] * self.weights[l]) + self.biases[l]
         else:
-            # write code for convolution operation using vectorization.DOnt use for loops
-            for l in range(self.num_filters):
-                for k in range(num_samples):
-                    conv_result = np.convolve(self.u_pad[k,:,:,:], self.weights[l,:,:,:], mode='valid')
-                    v[k,:,:,l] = conv_result + self.biases[l]
-                        
+            
+            strides = (self.stride* input_dim  ,self.stride, input_dim , 1)
+            strides = tuple(i * u.itemsize for i in strides)
+
+            subM = np.lib.stride_tricks.as_strided(self.u_pad, shape=( output_dim , output_dim, self.kernel_size , self.kernel_size), strides=strides)
+            # print("subM shape : " , subM.shape , "weights shape : " , self.weights.shape , "biases shape : " , self.biases.shape)
+
+            # convolve each filter with the input
+            for k in range(num_samples):
+                for l in range(self.num_filters):
+                    tmp = np.einsum('ijkl,klp->ijp', subM, self.weights[l])
+                    v[k,:,:,l] = np.sum(tmp, axis=(1,2)) + self.biases[l]
            
-        print("end of Conv Forward " , v.shape)
+        if self.verbose:
+            print("end of convolution forward : " , v.shape)
         return v
         
     def backward(self, del_v, lr):

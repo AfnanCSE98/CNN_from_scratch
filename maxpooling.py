@@ -9,13 +9,15 @@ class MaxPoolingLayer():
         self.stride = stride
         self.u_shape = None
         self.v_map = None
+        self.verbose = False
     
     def __str__(self):
         return f'MaxPool(kernel={self.kernel_size}, stride={self.stride})'
     
     def forward(self, u):
 
-        print("start of maxPooling forward : " , u.shape)
+        if self.verbose:
+            print("start of maxPooling forward : " , u.shape)
         self.u_shape = u.shape
         
         num_samples, input_dim, _, num_channels = u.shape
@@ -50,7 +52,8 @@ class MaxPoolingLayer():
             v = np.expand_dims(v, axis=3)
             v = np.repeat(v, num_channels, axis=3)
 
-        print("end of maxPooling forward : " , v.shape)
+        if self.verbose:
+            print("end of maxPooling forward : " , v.shape)
         return v
     
     def backward(self, del_v, lr):
