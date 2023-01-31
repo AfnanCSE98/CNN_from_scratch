@@ -46,11 +46,16 @@ class MaxPoolingLayer():
 
             v = np.zeros((num_samples, output_dim, output_dim, num_channels))
 
-            v = np.amax(subM, axis=(2,3))
-            v = np.expand_dims(v,axis=0)
-            v = np.repeat(v, num_samples, axis=0)
-            v = np.expand_dims(v, axis=3)
-            v = np.repeat(v, num_channels, axis=3)
+            for k in range(num_samples):
+                for l in range(num_channels):
+                    v[k,:,:,l] = np.max(subM, axis=(2,3))
+                    
+            # calculate v_map 
+            for k in range(num_samples):
+                for l in range(output_dim):
+                    self.v_map[k,l,:,:] = np.argmax(subM[k,l,:,:])
+
+
 
         if self.verbose:
             print("end of maxPooling forward : " , v.shape)
@@ -58,10 +63,7 @@ class MaxPoolingLayer():
     
     def backward(self, del_v, lr):
         del_u = np.zeros(self.u_shape)
-        
-        num_samples = del_v.shape[0]
-        input_dim = del_v.shape[1]
-        num_channels = del_v.shape[3]
+        num_samples, input_dim, _, num_channels = del_v.shape
         
         for k in range(num_samples):
             for l in range(num_channels):
@@ -70,12 +72,11 @@ class MaxPoolingLayer():
                         position = tuple(sum(pos) for pos in zip((self.v_map[k, i, j, l] // self.kernel_size, self.v_map[k, i, j, l] % self.kernel_size), (i * self.stride, j * self.stride)))
                         del_u[(k,) + position + (l,)] = del_u[(k,) + position + (l,)] + del_v[k, i, j, l]
         
-        return del_u
-        # del_u = np.zeros(self.u_shape)
-        # num_samples, input_dim, _, num_channels = del_v.shape
+        
         # positions = tuple(sum(pos) for pos in zip((self.v_map // self.kernel_size, self.v_map % self.kernel_size), (np.indices((input_dim, input_dim)) * self.stride)))
         # del_u[np.arange(num_samples)[:, np.newaxis, np.newaxis, np.newaxis], positions[0], positions[1], positions[2]] += del_v
-        # return del_u
+        
+        return del_u
 
     def update_learnable_parameters(self, del_w, del_b, lr):
         pass
