@@ -5,7 +5,7 @@ import math
 
 # -------------------------   vectorize maxPool --------------------------------------
 
-
+"""
 kernel_size = 2
 stride = 2
 
@@ -47,31 +47,12 @@ for k in range(num_samples):
         v_map[k,l,:,:] = np.argmax(subM[k,l,:,:])
 
 
-# for k in range(num_samples):
-#     for l in range(num_channels):
-#         subM_ = subM[k,:,:,l]
-#         v[k,:,:,l] = np.max(subM, axis=(2,3))
-#         v_map_flat = np.argmax(subM_, axis=(2,3))
-#         v_map_indices = np.unravel_index(v_map_flat, subM_[::stride,::stride].shape)
-#         v_map[k,:,:,l] = (v_map_indices[0]//stride, v_map_indices[1]//stride)
 
-
-# v = np.amax(subM, axis=(2,3))
-# v = np.expand_dims(v,axis=0)
-# v = np.repeat(v, num_samples, axis=0)
-# v = np.expand_dims(v, axis=3)
-# v = np.repeat(v, num_channels, axis=3)
-
-print("v :" , v.shape , "v1 :" , v1.shape)
-
-print(v)
-print("-----------------")
-print(v1)
 print("v1 nad v are same? " , np.allclose(v1, v))
 
 print("v_map :and v1_map are same? " , np.allclose(v1_map, v_map))
-
-# -------------------------   vectorize convolution --------------------------------------
+"""
+# -------------------------   vectorize convolution forward--------------------------------------
 """
 kernel_size = 5
 stride = 1
@@ -126,5 +107,59 @@ print("end of convolution forward : " , v.shape)
 print(np.allclose(v1, v))
 
 """
+
+
+# -------------------------   vectorize convolution backward--------------------------------------
+kernel_size = 5
+stride = 1
+padding = 2
+
+num_samples = 16
+input_dim = 180
+num_channels = 6
+
+u = np.random.rand(num_samples, input_dim, input_dim, num_channels)
+u_pad = np.pad(u, ((0,), (padding,), (padding,), (0,)), mode='constant')
+
+weights = None
+biases = None
+
+num_filters = 7
+
+if weights is None:
+    weights = np.random.randn(  num_filters , kernel_size, kernel_size, num_channels ) * math.sqrt(2 / (kernel_size * kernel_size * num_channels))
+if biases is None:
+    biases = np.zeros(num_filters)
+
+del_v = np.random.rand(16, 39, 39, 100)
+
+num_samples = del_v.shape[0]
+input_dim = del_v.shape[1]
+input_dim_pad = (input_dim - 1) * stride + 1
+output_dim = u_pad.shape[1] - 2 * padding
+num_channels = u_pad.shape[3]
+
+del_b = np.sum(del_v, axis=(0, 1, 2)) / num_samples
+del_v_sparse = np.zeros((num_samples, input_dim_pad, input_dim_pad, num_filters))
+del_v_sparse[:, :: stride, :: stride, :] = del_v
+weights_prime = np.rot90(np.transpose(weights, (3, 1, 2, 0)), 2, axes=(1, 2))
+del_w = np.zeros((num_filters, kernel_size, kernel_size, num_channels))
+
+for l in range(num_filters):
+    for i in range(kernel_size):
+        for j in range(kernel_size):
+            del_w[l, i, j, :] = np.mean(np.sum(u_pad[:, i: i + input_dim_pad, j: j + input_dim_pad, :] * np.reshape(del_v_sparse[:, :, :, l], del_v_sparse.shape[: 3] + (1,)), axis=(1, 2)), axis=0)
+      
+# vectorize del_w 
+del_w1 = np.zeros((num_filters, kernel_size, kernel_size, num_channels))
+strides = (stride* input_dim_pad  ,stride, input_dim_pad , 1)
+strides = tuple(i * u_pad.itemsize for i in strides)
+
+subM = np.lib.stride_tricks.as_strided(u_pad, shape=( output_dim , output_dim, kernel_size , kernel_size), strides=strides)
+
+for k in range(num_filters):
+    del_w1[k] = np.einsum('ijkl,ijkl->klp', subM, del_v_sparse[:, :, :, k]) / num_samples
+
+print("del_w and del_w1 are the same? " , np.allclose(del_w, del_w1))
 
 
