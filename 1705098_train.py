@@ -12,11 +12,19 @@ from utils import load_train_data , calculate_f1_scores , calculate_cross_entrop
 model = Model('model.txt')
 model.print_model()
 num_classes = 10
+<<<<<<< HEAD
 num_samples = 50
 num_epochs = 1
 lr = 0.001
 
 x_train , y_train , x_validation , y_validation  = load_train_data(n_samples=400 , path = 'training-a')
+=======
+num_samples = 43
+num_epochs = 2
+lr = 0.001
+
+x_train , y_train , x_validation , y_validation  = load_train_data(n_samples=86 , path = 'training-a')
+>>>>>>> 1df381bde8ab4eeb742d5cfd808f4d369829ddf2
 
 
 num_batches = math.ceil(y_train.shape[0] / num_samples)
