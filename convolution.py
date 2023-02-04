@@ -49,14 +49,11 @@ class ConvolutionLayer:
             # print("subM shape : " , subM.shape , "weights shape : " , self.weights.shape , "biases shape : " , self.biases.shape)
 
             # convolve each filter with the input
-            print("conv-forward : subM shape : " , subM.shape , "weights shape : " , self.weights.shape )
-            for k in range(num_samples):
-                for l in range(self.num_filters):
-                    tmp = np.einsum('ijkl,klp->ijp', subM, self.weights[l])
-                    # print("tmp shape : " , tmp.shape)
-                    v[k,:,:,l] = np.sum(tmp, axis=(1,2)) + self.biases[l]
-
-            print("v shape : " , v.shape)
+            # for k in range(num_samples):
+            for l in range(self.num_filters):
+                tmp = np.einsum('ijkl,klp->ijp', subM, self.weights[l])
+                v[:,:,:,l] = np.sum(tmp, axis=(1,2)) + self.biases[l]
+        
         if self.verbose:
             print("end of convolution forward : " , v.shape)
         return v
@@ -70,7 +67,6 @@ class ConvolutionLayer:
         num_channels = self.u_pad.shape[3]
         
         del_b = np.sum(del_v, axis=(0, 1, 2)) / num_samples
-
         del_v_sparse = np.zeros((num_samples, input_dim_pad, input_dim_pad, self.num_filters))
         del_v_sparse[:, :: self.stride, :: self.stride, :] = del_v 
         weights_prime = np.rot90(np.transpose(self.weights, (3, 1, 2, 0)), 2, axes=(1, 2))

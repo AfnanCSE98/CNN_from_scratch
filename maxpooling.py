@@ -42,7 +42,7 @@ class MaxPoolingLayer():
             strides = (stride* input_dim  ,stride, input_dim , 1)
             strides = tuple(i * u.itemsize for i in strides)
 
-            subM = np.lib.stride_tricks.as_strided(u, shape=( output_dim , output_dim, kernel_size , kernel_size), strides=strides)
+            subM = np.lib.stride_tricks.as_strided(u, shape=(output_dim , output_dim, kernel_size , kernel_size), strides=strides)
 
             v = np.zeros((num_samples, output_dim, output_dim, num_channels))
 
@@ -51,8 +51,15 @@ class MaxPoolingLayer():
                     v[k,:,:,l] = np.max(subM, axis=(2,3))
 
             # calculate v_map 
+
+            print("num_samples : " , num_samples , " output_dim : " , output_dim , " num_channels : " , num_channels)
+            print("subM shape : " , subM.shape)
+
             # print("subM shape : " , subM.shape)
-            for k in range(num_samples):
+
+            for k in range(output_dim):
+                if k>=num_samples:
+                    break
                 for l in range(output_dim):
                     self.v_map[k,l,:,:] = np.argmax(subM[k,l,:,:])
 
@@ -74,21 +81,21 @@ class MaxPoolingLayer():
         
         
         # vectorize and find del_u1 using strides
-        strides = (self.stride* input_dim  ,self.stride, input_dim , 1)
-        strides = tuple(i * del_u.itemsize for i in strides)
+        # strides = (self.stride* input_dim  ,self.stride, input_dim , 1)
+        # strides = tuple(i * del_u.itemsize for i in strides)
 
-        subM = np.lib.stride_tricks.as_strided(del_u, shape=( input_dim , input_dim, self.kernel_size , self.kernel_size), strides=strides)
+        # subM = np.lib.stride_tricks.as_strided(del_u, shape=( input_dim , input_dim, self.kernel_size , self.kernel_size), strides=strides)
 
-        del_u1 = np.zeros(self.u_shape)
-        for k in range(num_samples):
-            for l in range(num_channels):
-                del_u1[k,:,:,l] = np.max(subM, axis=(2,3))
+        # del_u1 = np.zeros(self.u_shape)
+        # for k in range(num_samples):
+        #     for l in range(num_channels):
+        #         del_u1[k,:,:,l] = np.max(subM, axis=(2,3))
         
 
-        if np.allclose(del_u, del_u1):
-            print("del_u and del_u1 are equal")
-        else:
-            print("del_u and del_u1 are not equal")
+        # if np.allclose(del_u, del_u1):
+        #     print("del_u and del_u1 are equal")
+        # else:
+        #     print("del_u and del_u1 are not equal")
 
         return del_u
 

@@ -12,12 +12,13 @@ from utils import load_train_data , calculate_f1_scores , calculate_cross_entrop
 model = Model('model.txt')
 model.print_model()
 num_classes = 10
-num_samples = 43
-num_epochs = 2
-lr = 0.001
 
-x_train , y_train , x_validation , y_validation  = load_train_data(n_samples=43 , path = 'training-a')
+num_samples = 50
+num_epochs = 1
+lr = 0.01
 
+
+x_train , y_train , x_validation , y_validation  = load_train_data(n_samples=50 , path = 'training-a')
 
 num_batches = math.ceil(y_train.shape[0] / num_samples)
 min_f1_score = math.inf
@@ -37,6 +38,8 @@ for epoch in range(num_epochs):
     print()
     training_stats.append([epoch + 1, loss])
     print(f'(Training) Epoch: {epoch + 1} -> Training loss {loss}')
+
+    model.save_model_pickle('outputdir/model.pkl')
     
     y_true = np.zeros((num_classes, y_validation.shape[0]))
     y_predicted = model.predict(x_validation)
@@ -65,7 +68,6 @@ with open('outputdir/validation_stats.csv', 'w') as csv_file:
 
 model.set_model()
 
-model.save_model_pickle('outputdir/model.pkl')
 
 with open('outputdir/training_stats.csv', 'w') as csv_file:
     csv_writer = csv.writer(csv_file) 
