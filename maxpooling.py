@@ -46,9 +46,9 @@ class MaxPoolingLayer():
 
             v = np.zeros((num_samples, output_dim, output_dim, num_channels))
 
-            for k in range(num_samples):
-                for l in range(num_channels):
-                    v[k,:,:,l] = np.max(subM, axis=(2,3))
+            # for k in range(num_samples):
+            for l in range(num_channels):
+                v[:,:,:,l] = np.max(subM, axis=(2,3))
 
             # calculate v_map 
 

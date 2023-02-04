@@ -18,7 +18,7 @@ num_epochs = 1
 lr = 0.01
 
 
-x_train , y_train , x_validation , y_validation  = load_train_data(n_samples=50 , path = 'training-a')
+x_train , y_train , x_validation , y_validation  = load_train_data(n_samples=150 , path = 'training-a')
 
 num_batches = math.ceil(y_train.shape[0] / num_samples)
 min_f1_score = math.inf

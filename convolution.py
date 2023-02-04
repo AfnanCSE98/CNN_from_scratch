@@ -106,7 +106,7 @@ class ConvolutionLayer:
                         # print(del_v_sparse_pad.shape, weights_prime.shape)
                         del_u[k, i, j, l] = np.sum(del_v_sparse_pad[k, i: i + self.kernel_size, j: j + self.kernel_size, :] * weights_prime[l])
         
-        print("del_u shape : " , del_u.shape)
+        # print("del_u shape : " , del_u.shape)
         # write the above 4 for loops in a vectorized way using strides and np.einsum
         del_u1 = np.zeros((num_samples, output_dim, output_dim, num_channels))
         strides = (self.stride* input_dim_pad  ,self.stride, input_dim_pad , 1)
@@ -114,8 +114,8 @@ class ConvolutionLayer:
 
         subM = np.lib.stride_tricks.as_strided(del_v_sparse_pad, shape=( output_dim , output_dim, self.kernel_size , self.kernel_size), strides=strides)
 
-        print("subM shape : " , subM.shape, "weights_prime shape : " , weights_prime.shape)
-        print("num_filters : " , self.num_filters, "num_samples : " , num_samples , " length of weights_prime : " , len(weights_prime) , "num_channels : " , num_channels)
+        # print("subM shape : " , subM.shape, "weights_prime shape : " , weights_prime.shape)
+        # print("num_filters : " , self.num_filters, "num_samples : " , num_samples , " length of weights_prime : " , len(weights_prime) , "num_channels : " , num_channels)
 
         for k in range(num_samples):
             for l in range(num_channels):

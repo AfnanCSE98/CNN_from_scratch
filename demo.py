@@ -9,9 +9,9 @@ import math
 kernel_size = 2
 stride = 2
 
-num_samples = 56
+num_samples =32
 input_dim = 40
-num_channels = 2
+num_channels = 27
 
 u = np.random.rand(num_samples, input_dim, input_dim, num_channels)
 print(u.shape)
@@ -37,16 +37,13 @@ for k in range(num_samples):
                 # print(u[k, i * stride: i * stride + kernel_size, j * stride: j * stride + kernel_size, l].shape)
                 v1_map[k, i, j, l] = np.argmax(u[k, i * stride: i * stride + kernel_size, j * stride: j * stride + kernel_size, l])
 
-for k in range(num_samples):
-    for l in range(num_channels):
-        v[k,:,:,l] = np.max(subM, axis=(2,3))
+# for k in range(num_samples):
+for l in range(num_channels):
+    v[:,:,:,l] = np.max(subM, axis=(2,3))
         
 # calculate v_map 
-for k in range(output_dim):
-    if k>=num_samples:
-        break
-    for l in range(output_dim):
-        v_map[k,l,:,:] = np.argmax(subM[k,l,:,:])
+for l in range(output_dim):
+    v_map[:,l,:,:] = np.argmax(subM[:,l,:,:])
 
 
 
@@ -137,7 +134,7 @@ print("v_map :and v1_map are same? " , np.allclose(v1_map, v_map))
 # if biases is None:
 #     biases = np.zeros(num_filters)
 
-# del_v = np.random.rand(16, 39, 39, 100)
+# del_v = np.random.rand(16, 39, 39, 7)
 
 # num_samples = del_v.shape[0]
 # input_dim = del_v.shape[1]
@@ -157,15 +154,48 @@ print("v_map :and v1_map are same? " , np.allclose(v1_map, v_map))
 #             del_w[l, i, j, :] = np.mean(np.sum(u_pad[:, i: i + input_dim_pad, j: j + input_dim_pad, :] * np.reshape(del_v_sparse[:, :, :, l], del_v_sparse.shape[: 3] + (1,)), axis=(1, 2)), axis=0)
       
 # # vectorize del_w 
-# del_w1 = np.zeros((num_filters, kernel_size, kernel_size, num_channels))
+# # del_w1 = np.zeros((num_filters, kernel_size, kernel_size, num_channels))
+# # strides = (stride* input_dim_pad  ,stride, input_dim_pad , 1)
+# # strides = tuple(i * u_pad.itemsize for i in strides)
+
+# # subM = np.lib.stride_tricks.as_strided(u_pad, shape=( output_dim , output_dim, kernel_size , kernel_size), strides=strides)
+
+# # for k in range(num_filters):
+# #     del_w1[k] = np.einsum('ijkl,ijkl->klp', subM, del_v_sparse[:, :, :, k]) / num_samples
+
+# # print("del_w and del_w1 are the same? " , np.allclose(del_w, del_w1))
+# del_u = np.zeros((num_samples, output_dim, output_dim, num_channels))
+# del_v_sparse_pad = np.pad(del_v_sparse, ((0,), (kernel_size - 1 - padding,), (kernel_size - 1 - padding,), (0,)), mode='constant')
+
+# for k in range(num_samples):
+#     for l in range(num_channels):
+#         for i in range(output_dim):
+#             for j in range(output_dim):
+#                 # print(del_v_sparse_pad.shape, weights_prime.shape)
+#                 del_u[k, i, j, l] = np.sum(del_v_sparse_pad[k, i: i + kernel_size, j: j + kernel_size, :] * weights_prime[l])
+
+
+# print("del_u shape : " , del_u.shape)
+# # write the above 4 for loops in a vectorized way using strides and np.einsum
+# del_u1 = np.zeros((num_samples, output_dim, output_dim, num_channels))
 # strides = (stride* input_dim_pad  ,stride, input_dim_pad , 1)
-# strides = tuple(i * u_pad.itemsize for i in strides)
+# strides = tuple(i * del_v_sparse_pad.itemsize for i in strides)
 
-# subM = np.lib.stride_tricks.as_strided(u_pad, shape=( output_dim , output_dim, kernel_size , kernel_size), strides=strides)
+# subM = np.lib.stride_tricks.as_strided(del_v_sparse_pad, shape=( output_dim , output_dim, kernel_size , kernel_size), strides=strides)
 
-# for k in range(num_filters):
-#     del_w1[k] = np.einsum('ijkl,ijkl->klp', subM, del_v_sparse[:, :, :, k]) / num_samples
+# print("subM shape : " , subM.shape, "weights_prime shape : " , weights_prime.shape)
+# print("num_filters : " , num_filters, "num_samples : " , num_samples , " length of weights_prime : " , len(weights_prime) , "num_channels : " , num_channels)
 
-# print("del_w and del_w1 are the same? " , np.allclose(del_w, del_w1))
+# for k in range(num_samples):
+#     for l in range(num_channels):
+#         tmp = np.einsum('ijkl,klp->ijp', subM, weights_prime[l])
+#         # tmp = np.tensordot(np.einsum('ijkl,klp->ijp', subM, weights_prime[l]), weights_prime[l], axes=0)
+#         # print("tmp shape : " , tmp.shape)
+#         del_u1[k, :, :, l] = np.sum(tmp, axis=(1,2))
+#         # del_u1[k, :, :, l] = tmp
 
-
+# print("del_u1 shape : " , del_u1.shape)
+# if np.allclose(del_u, del_u1):
+#     print("del_u1 is correct")
+# else:
+#     print("del_u1 is wrong")
