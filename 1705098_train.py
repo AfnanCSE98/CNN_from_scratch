@@ -16,7 +16,7 @@ num_samples = 43
 num_epochs = 2
 lr = 0.001
 
-x_train , y_train , x_validation , y_validation  = load_train_data(n_samples=86 , path = 'training-a')
+x_train , y_train , x_validation , y_validation  = load_train_data(n_samples=43 , path = 'training-a')
 
 
 num_batches = math.ceil(y_train.shape[0] / num_samples)

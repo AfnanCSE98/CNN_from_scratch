@@ -73,9 +73,23 @@ class MaxPoolingLayer():
                         del_u[(k,) + position + (l,)] = del_u[(k,) + position + (l,)] + del_v[k, i, j, l]
         
         
-        # positions = tuple(sum(pos) for pos in zip((self.v_map // self.kernel_size, self.v_map % self.kernel_size), (np.indices((input_dim, input_dim)) * self.stride)))
-        # del_u[np.arange(num_samples)[:, np.newaxis, np.newaxis, np.newaxis], positions[0], positions[1], positions[2]] += del_v
+        # vectorize and find del_u1 using strides
+        strides = (self.stride* input_dim  ,self.stride, input_dim , 1)
+        strides = tuple(i * del_u.itemsize for i in strides)
+
+        subM = np.lib.stride_tricks.as_strided(del_u, shape=( input_dim , input_dim, self.kernel_size , self.kernel_size), strides=strides)
+
+        del_u1 = np.zeros(self.u_shape)
+        for k in range(num_samples):
+            for l in range(num_channels):
+                del_u1[k,:,:,l] = np.max(subM, axis=(2,3))
         
+
+        if np.allclose(del_u, del_u1):
+            print("del_u and del_u1 are equal")
+        else:
+            print("del_u and del_u1 are not equal")
+
         return del_u
 
     def update_learnable_parameters(self, del_w, del_b, lr):
