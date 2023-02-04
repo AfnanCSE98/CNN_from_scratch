@@ -5,7 +5,7 @@ import math
 
 # -------------------------   vectorize maxPool --------------------------------------
 
-
+"""
 kernel_size = 2
 stride = 2
 
@@ -70,9 +70,9 @@ print(v1)
 print("v1 nad v are same? " , np.allclose(v1, v))
 
 print("v_map :and v1_map are same? " , np.allclose(v1_map, v_map))
-
-# -------------------------   vectorize convolution --------------------------------------
 """
+# -------------------------   vectorize convolution --------------------------------------
+
 kernel_size = 5
 stride = 1
 padding = 2
@@ -102,29 +102,33 @@ u_pad = np.pad(u, ((0,), (padding,), (padding,), (0,)), mode='constant')
 v = np.zeros((num_samples, output_dim, output_dim, num_filters))
 
 v1 = v
-for k in range(num_samples):
-    for l in range(num_filters):
-        for i in range(output_dim):
-            for j in range(output_dim):
-                v1[k, i, j, l] = np.sum(u_pad[k, i * stride: i * stride + kernel_size, j * stride: j * stride + kernel_size, :] * weights[l]) + biases[l]
+# for k in range(num_samples):
+#     for l in range(num_filters):
+#         for i in range(output_dim):
+#             for j in range(output_dim):
+#                 v1[k, i, j, l] = np.sum(u_pad[k, i * stride: i * stride + kernel_size, j * stride: j * stride + kernel_size, :] * weights[l]) + biases[l]
 
 
-strides = (stride* input_dim  ,stride, input_dim , 1)
+print((stride* input_dim  ,stride, num_filters, input_dim , 1))
+strides = (stride* input_dim  ,stride, num_filters , input_dim , 1)
 strides = tuple(i * u.itemsize for i in strides)
 
-subM = np.lib.stride_tricks.as_strided(u_pad, shape=( output_dim , output_dim, kernel_size , kernel_size), strides=strides)
+print("strides : " , strides)
+
+subM = np.lib.stride_tricks.as_strided(u_pad, shape=(output_dim , output_dim, num_filters, kernel_size , kernel_size), strides=strides)
+
 print("subM shape : " , subM.shape , "weights shape : " , weights.shape , "biases shape : " , biases.shape)
+print("output_dim : " , output_dim , "kernel_size : " , kernel_size , "stride : " , stride , "padding : " , padding)
 
-for k in range(num_samples):
-    for l in range(num_filters):
-        tmp = np.einsum('ijkl,klp->ijp', subM, weights[l])
-        v[k,:,:,l] = np.sum(tmp, axis=(1,2)) + biases[l]
+# correct
 
+tmp = np.einsum('ijpkl,pklf->ijf', subM, weights)
+v= np.sum(tmp, axis=(0,1)) + biases
 print("end of convolution forward : " , v.shape)
 
-# check if v1 and v are the same
+# check if v1 and v are the same 
 print(np.allclose(v1, v))
 
-"""
+
 
 
