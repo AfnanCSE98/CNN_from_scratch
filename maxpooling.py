@@ -51,12 +51,6 @@ class MaxPoolingLayer():
                 v[:,:,:,l] = np.max(subM, axis=(2,3))
 
             # calculate v_map 
-
-            print("num_samples : " , num_samples , " output_dim : " , output_dim , " num_channels : " , num_channels)
-            print("subM shape : " , subM.shape)
-
-            # print("subM shape : " , subM.shape)
-
             for k in range(output_dim):
                 if k>=num_samples:
                     break
@@ -69,6 +63,9 @@ class MaxPoolingLayer():
         return v
     
     def backward(self, del_v, lr):
+        if self.verbose:
+            print("start of maxPooling backward : " , del_v.shape)
+            # print(self.v_map.shape)
         del_u = np.zeros(self.u_shape)
         num_samples, input_dim, _, num_channels = del_v.shape
         

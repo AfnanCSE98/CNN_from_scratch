@@ -18,7 +18,7 @@ def resize_images(path):
     #resize all images to 32x32
     resized_images = []
     for image in images:
-        resized_image = cv2.resize(image, (32,32))
+        resized_image = cv2.resize(image, (180,180))
         resized_images.append(resized_image)
     #save all resized images in a new directory
     new_path = path + '-resized'

@@ -3,54 +3,101 @@ import math
 
 
 
-# -------------------------   vectorize maxPool --------------------------------------
+# -------------------------   vectorize maxPool forward --------------------------------------
 
 
-kernel_size = 2
-stride = 2
+# kernel_size = 2
+# stride = 2
 
-num_samples =32
-input_dim = 40
-num_channels = 27
+# num_samples =32
+# input_dim = 40
+# num_channels = 27
 
-u = np.random.rand(num_samples, input_dim, input_dim, num_channels)
-print(u.shape)
-output_dim = math.floor((input_dim - kernel_size) / stride) + 1
-print("input_dim : " , input_dim , " output_dim : " , output_dim , " kernel_size : " , kernel_size , " stride : " , stride)
+# u = np.random.rand(num_samples, input_dim, input_dim, num_channels)
+# print(u.shape)
+# output_dim = math.floor((input_dim - kernel_size) / stride) + 1
+# print("input_dim : " , input_dim , " output_dim : " , output_dim , " kernel_size : " , kernel_size , " stride : " , stride)
 
-strides = (stride* input_dim  ,stride, input_dim , 1)
-strides = tuple(i * u.itemsize for i in strides)
+# strides = (stride* input_dim  ,stride, input_dim , 1)
+# strides = tuple(i * u.itemsize for i in strides)
 
-subM = np.lib.stride_tricks.as_strided(u, shape=( output_dim , output_dim, kernel_size , kernel_size), strides=strides)
+# subM = np.lib.stride_tricks.as_strided(u, shape=( output_dim , output_dim, kernel_size , kernel_size), strides=strides)
 
-v = np.zeros((num_samples, output_dim, output_dim, num_channels))
-v_map = np.zeros((num_samples, output_dim, output_dim, num_channels)).astype(np.int32)
+# v = np.zeros((num_samples, output_dim, output_dim, num_channels))
+# v_map = np.zeros((num_samples, output_dim, output_dim, num_channels)).astype(np.int32)
 
-v1_map = v_map 
-v1 = v 
-
-for k in range(num_samples):
-    for l in range(num_channels):
-        for i in range(output_dim):
-            for j in range(output_dim):
-                v1[k, i, j, l] = np.max(u[k, i * stride: i * stride + kernel_size, j * stride: j * stride + kernel_size, l])
-                # print(u[k, i * stride: i * stride + kernel_size, j * stride: j * stride + kernel_size, l].shape)
-                v1_map[k, i, j, l] = np.argmax(u[k, i * stride: i * stride + kernel_size, j * stride: j * stride + kernel_size, l])
+# v1_map = v_map 
+# v1 = v 
 
 # for k in range(num_samples):
-for l in range(num_channels):
-    v[:,:,:,l] = np.max(subM, axis=(2,3))
+#     for l in range(num_channels):
+#         for i in range(output_dim):
+#             for j in range(output_dim):
+#                 v1[k, i, j, l] = np.max(u[k, i * stride: i * stride + kernel_size, j * stride: j * stride + kernel_size, l])
+#                 # print(u[k, i * stride: i * stride + kernel_size, j * stride: j * stride + kernel_size, l].shape)
+#                 v1_map[k, i, j, l] = np.argmax(u[k, i * stride: i * stride + kernel_size, j * stride: j * stride + kernel_size, l])
+
+# # for k in range(num_samples):
+# for l in range(num_channels):
+#     v[:,:,:,l] = np.max(subM, axis=(2,3))
         
-# calculate v_map 
-for l in range(output_dim):
-    v_map[:,l,:,:] = np.argmax(subM[:,l,:,:])
+# # calculate v_map 
+# for l in range(output_dim):
+#     v_map[:,l,:,:] = np.argmax(subM[:,l,:,:])
 
 
 
-print("v1 nad v are same? " , np.allclose(v1, v))
+# print("v1 nad v are same? " , np.allclose(v1, v))
 
-print("v_map :and v1_map are same? " , np.allclose(v1_map, v_map))
+# print("v_map :and v1_map are same? " , np.allclose(v1_map, v_map))
 
+# -------------------------   vectorize maxPool backward --------------------------------------
+
+
+del_v = np.random.rand(50, 43, 43, 12)
+print("start of maxPooling backward : " , del_v.shape)
+v_map = np.random.randint(0, 4, (50, 43, 43, 12))
+kernel_size =2
+stride = 2
+
+num_samples, input_dim, _, num_channels = del_v.shape
+
+del_u = np.zeros((50, 86, 86, 12))
+print("v_map : " , v_map.shape , " del_u : " , del_u.shape , " del_v : " , del_v.shape)
+# print(v_map)
+cnt = 0
+for k in range(num_samples):
+    for l in range(num_channels):
+        for i in range(input_dim):
+            for j in range(input_dim):
+                # print((v_map[k, i, j, l] // kernel_size, v_map[k, i, j, l] % kernel_size), (i * stride, j * stride))
+                tmp = zip((v_map[k, i, j, l] // kernel_size, v_map[k, i, j, l] % kernel_size), (i * stride, j * stride))
+                # print tmp and its shape
+                # for x in tmp:
+                #     print(x)
+                # cnt+=1
+                # if cnt == 10:
+                #     exit(0)
+                position = tuple(sum(pos) for pos in tmp)
+                del_u[(k,) + position + (l,)] = del_u[(k,) + position + (l,)] + del_v[k, i, j, l]
+
+
+del_u1 = np.zeros((50, 86, 86, 12))
+# # vectorize calculation of del_u1 using strides
+# strides = (stride* input_dim  ,stride, input_dim , 1)
+# strides = tuple(i * del_v.itemsize for i in strides)
+
+# subM = np.lib.stride_tricks.as_strided(del_u1, shape=( input_dim , input_dim, kernel_size , kernel_size), strides=strides)
+
+# for l in range(num_channels):
+#     tmp = zip((v_map[:,:,:,l] // kernel_size, v_map[:,:,:,l] % kernel_size), (0, 0))
+#     position = tuple(sum(pos) for pos in tmp)
+#     subM[:,:,:,l] = del_v[:,:,:,l][position]
+#     del_u1[:,:,:,l] = np.sum(subM, axis=(2,3))
+
+
+
+print("del_u1 and del_u are same? " , np.allclose(del_u1, del_u))
 # -------------------------   vectorize convolution --------------------------------------
 
 # kernel_size = 5

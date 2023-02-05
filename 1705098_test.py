@@ -9,15 +9,17 @@ import sys
 
 from model import Model
 from utils import load_test_data , calculate_f1_scores , calculate_cross_entropy_loss
+from sklearn.metrics import classification_report
 
 num_classes = 10
 
-
 model = Model('model.txt')
-model.load_model_pickle('outputdir/model.pkl')
+# model.load_model_pickle('outputdir/model.pkl')
+model.load_model_pickle('outputdir/model-a-0-1000.pkl') 
+model.print_model()
 
 test_path = sys.argv[1]
-n_sample = 100
+n_sample = 500
 x_test , y_test , filenames = load_test_data(n_samples=n_sample , path=test_path)
 
 y_true = np.zeros((num_classes, y_test.shape[0]))
@@ -29,7 +31,6 @@ for i in range(y_true.shape[1]):
 # print y_true and y_predicted side by side for each image
 # print(y_true.shape) # ((10  , num_samples))
 # print(y_predicted.shape) # ((10  , num_samples))
-
 
 predictions = []
 for i in range(y_predicted.shape[1]):
@@ -48,6 +49,7 @@ accuracy, f1_score = calculate_f1_scores(num_classes, y_test, np.reshape(np.argm
 test_stats = [[cross_entropy_loss, accuracy, f1_score]]
 print(f'(Testing) -> CE Loss: {cross_entropy_loss:.4f}\tAccuracy: {accuracy:.4f}\tF1 Score: {f1_score:.4f}')
 
+print(classification_report(y_test, np.reshape(np.argmax(y_predicted, axis=0), y_test.shape)))
 
 if not os.path.exists('outputdir/'):
     os.makedirs('outputdir/')

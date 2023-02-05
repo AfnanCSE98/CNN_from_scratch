@@ -1,7 +1,6 @@
-# write a class for implementing convolution operation using 4 hyerparameters : no_of_output_channels, filter_dim, stride, padding
-
 import numpy as np
 import math 
+
 class ConvolutionLayer:
     def __init__(self, num_filters, kernel_size, stride=1, padding=0):
         self.num_filters = num_filters
@@ -59,7 +58,8 @@ class ConvolutionLayer:
         return v
         
     def backward(self, del_v, lr):
-        print("start of convolution backward : " , del_v.shape)
+        if self.verbose:
+            print("start of convolution backward : " , del_v.shape)
         num_samples = del_v.shape[0]
         input_dim = del_v.shape[1]
         input_dim_pad = (input_dim - 1) * self.stride + 1
@@ -79,7 +79,7 @@ class ConvolutionLayer:
                     del_w[l, i, j, :] = np.mean(np.sum(self.u_pad[:, i: i + input_dim_pad, j: j + input_dim_pad, :] * np.reshape(del_v_sparse[:, :, :, l], del_v_sparse.shape[: 3] + (1,)), axis=(1, 2)), axis=0)
         
         # print("del_w shape : " , del_w.shape)
-        # vectorize del_w 
+        # vectorize del_w             # ref: https://cs231n.github.io/neural-networks-2/#init
         # del_w1 = np.zeros((self.num_filters, self.kernel_size, self.kernel_size, num_channels))
         # strides = (self.stride* input_dim_pad  ,self.stride, input_dim_pad , 1)
         # strides = tuple(i * self.u_pad.itemsize for i in strides)
@@ -108,28 +108,28 @@ class ConvolutionLayer:
         
         # print("del_u shape : " , del_u.shape)
         # write the above 4 for loops in a vectorized way using strides and np.einsum
-        del_u1 = np.zeros((num_samples, output_dim, output_dim, num_channels))
-        strides = (self.stride* input_dim_pad  ,self.stride, input_dim_pad , 1)
-        strides = tuple(i * del_v_sparse_pad.itemsize for i in strides)
+        # del_u1 = np.zeros((num_samples, output_dim, output_dim, num_channels))
+        # strides = (self.stride* input_dim_pad  ,self.stride, input_dim_pad , 1)
+        # strides = tuple(i * del_v_sparse_pad.itemsize for i in strides)
 
-        subM = np.lib.stride_tricks.as_strided(del_v_sparse_pad, shape=( output_dim , output_dim, self.kernel_size , self.kernel_size), strides=strides)
+        # subM = np.lib.stride_tricks.as_strided(del_v_sparse_pad, shape=( output_dim , output_dim, self.kernel_size , self.kernel_size), strides=strides)
 
         # print("subM shape : " , subM.shape, "weights_prime shape : " , weights_prime.shape)
         # print("num_filters : " , self.num_filters, "num_samples : " , num_samples , " length of weights_prime : " , len(weights_prime) , "num_channels : " , num_channels)
 
-        for k in range(num_samples):
-            for l in range(num_channels):
-                tmp = np.einsum('ijkl,klp->ijp', subM, weights_prime[l])
-                # tmp = np.tensordot(np.einsum('ijkl,klp->ijp', subM, weights_prime[l]), weights_prime[l], axes=0)
-                # print("tmp shape : " , tmp.shape)
-                del_u1[k, :, :, l] = np.sum(tmp, axis=(1,2))
+        # for k in range(num_samples):
+        #     for l in range(num_channels):
+        #         tmp = np.einsum('ijkl,klp->ijp', subM, weights_prime[l])
+        #         # tmp = np.tensordot(np.einsum('ijkl,klp->ijp', subM, weights_prime[l]), weights_prime[l], axes=0)
+        #         # print("tmp shape : " , tmp.shape)
+        #         del_u1[k, :, :, l] = np.sum(tmp, axis=(1,2))
                 # del_u1[k, :, :, l] = tmp
 
-        print("del_u1 shape : " , del_u1.shape)
-        if np.allclose(del_u, del_u1):
-            print("del_u1 is correct")
-        else:
-            print("del_u1 is wrong")
+        # print("del_u1 shape : " , del_u1.shape)
+        # if np.allclose(del_u, del_u1):
+        #     print("del_u1 is correct")
+        # else:
+        #     print("del_u1 is wrong")
 
         self.update_learnable_parameters(del_w, del_b, lr)
         return del_u

@@ -44,14 +44,6 @@ def load_train_data(n_samples , path):
     x_validation = np.reshape(x_validation, (*x_validation.shape, 1)).astype(np.float32)
     y_validation = np.reshape(y_validation, (*y_validation.shape, 1))
 
-
-    # print("x_train " , x_train.shape)
-    # print("y_train " , y_train.shape)
-    # print("x_validation " , x_validation.shape)
-    # print("y_validation " , y_validation.shape)
-    # print("x_test " , x_test.shape)
-    # print("y_test " , y_test.shape)
-
     return x_train, y_train, x_validation, y_validation
 
 

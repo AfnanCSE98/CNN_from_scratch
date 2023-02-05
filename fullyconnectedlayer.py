@@ -19,10 +19,8 @@ class FullyConnectedLayer():
         self.u = u
         
         if self.weights is None:
-            # ref: https://cs231n.github.io/neural-networks-2/#init
             self.weights = np.random.randn(self.output_dim, u.shape[0]) * math.sqrt(2 / u.shape[0])
         if self.biases is None:
-            # ref: https://cs231n.github.io/neural-networks-2/#init
             self.biases = np.zeros((self.output_dim, 1))
         
         v = self.weights @ u + self.biases

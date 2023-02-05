@@ -39,6 +39,7 @@ class Model:
             u = self.model_components[i].forward(u)
         
         del_v = u - y_true  # denoting y_predicted by u
+
         # calculate categorical cross-entropy loss. It measures the dissimilarity between the predicted probabilities and the true class labels
         loss = -np.sum(y_true * np.log(u + 1e-8)) / y_true.shape[0]
         
@@ -55,6 +56,7 @@ class Model:
             u = self.model_components[i].forward(u)
         
         return u  # denoting y_predicted by u
+    
     
     def save_model(self):
         for i in range(len(self.model_components)):
@@ -76,3 +78,6 @@ class Model:
     def load_model_pickle(self, model_path):
         with open(model_path, 'rb') as model_file:
             self.model_components = pickle.load(model_file)
+            # print weights of convolution layer
+            # print(self.model_components[0].weights.shape)
+          
