@@ -11,7 +11,7 @@ This repository contains all the programs coded for the assignment on *Convoluti
 
 The forward and backward functions are implemented for each of these components so that any model architecture containing these components can be trained with backpropagation algorithm. **[numtaDB](https://www.kaggle.com/datasets/BengaliAI/numta)** dataset from kaggle were used in this assignment for image classification of bangla handwritten digits.  
 
-
+The model was trained on images from `training-a`,`training-b`,`training-c`directories.
 
 ## Train
 - Make sure numpy,pandas,scikit-learn,matplotlib and seaborn packages are installed.
@@ -24,7 +24,14 @@ The forward and backward functions are implemented for each of these components 
 - If you want to generate predictions as well as check the correctness of your model's performance , you must have a `testing-a.csv` file.Run the test script with `python test_1705098.py 'testing-a' True
 
 ## Architecture
-Lenet-5
-![](https://images.app.goo.gl/aCbjaSh2k1DcXUFc7)
+![image](https://user-images.githubusercontent.com/57033114/219939175-1a17f138-26ef-46f3-9e42-7cea25a83a65.png)
 
-## model's performance
+## model's performance 
+The model was tested on images from `training-d` directory
+
+![image](https://user-images.githubusercontent.com/57033114/219939269-023242ab-2209-46ec-ad4a-e436477461fc.png)
+
+And the classification matrix
+
+![image](https://user-images.githubusercontent.com/57033114/219939321-77d35785-1965-4a67-91c1-24548f24e63f.png)
+
