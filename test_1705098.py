@@ -410,7 +410,11 @@ with open(model_path, 'rb') as model_file:
     model.layers = pickle.load(model_file)
 
 test_path = sys.argv[1]
-generate_insights = True
+try:
+
+    generate_insights = sys.argv[2]
+except:
+    generate_insights = False
 
 if generate_insights:
     X_test, y_test , filenames = getData(label_path=test_path+".csv", image_path=test_path)
